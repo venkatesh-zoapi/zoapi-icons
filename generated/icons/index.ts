@@ -1,3 +1,9 @@
+export { Flash } from "./Flash";
+export { Money } from "./Money";
+export { AArrowUp } from "./a-arrow-up";
+export { ALargeSmall } from "./a-large-small";
+export { Activity } from "./activity";
+export { Airplay } from "./airplay";
 export { Camera } from "./camera";
 export { Compass } from "./compass";
 export { Cpu } from "./cpu";
