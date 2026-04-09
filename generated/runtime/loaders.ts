@@ -1,0 +1,24 @@
+import type { IconComponent } from "./types";
+
+export const iconLoaders: Record<string, () => Promise<IconComponent>> = {
+  "camera": () => import("../icons/camera").then((m) => m.Camera),
+  "compass": () => import("../icons/compass").then((m) => m.Compass),
+  "cpu": () => import("../icons/cpu").then((m) => m.Cpu),
+  "download": () => import("../icons/download").then((m) => m.Download),
+  "file-code": () => import("../icons/file-code").then((m) => m.FileCode),
+  "file": () => import("../icons/file").then((m) => m.File),
+  "folder": () => import("../icons/folder").then((m) => m.Folder),
+  "laptop": () => import("../icons/laptop").then((m) => m.Laptop),
+  "mail": () => import("../icons/mail").then((m) => m.Mail),
+  "map": () => import("../icons/map").then((m) => m.Map),
+  "message-circle": () => import("../icons/message-circle").then((m) => m.MessageCircle),
+  "music": () => import("../icons/music").then((m) => m.Music),
+  "pause": () => import("../icons/pause").then((m) => m.Pause),
+  "phone": () => import("../icons/phone").then((m) => m.Phone),
+  "pin": () => import("../icons/pin").then((m) => m.Pin),
+  "play": () => import("../icons/play").then((m) => m.Play),
+  "route": () => import("../icons/route").then((m) => m.Route),
+  "send": () => import("../icons/send").then((m) => m.Send),
+  "smartphone": () => import("../icons/smartphone").then((m) => m.Smartphone),
+  "watch": () => import("../icons/watch").then((m) => m.Watch),
+};

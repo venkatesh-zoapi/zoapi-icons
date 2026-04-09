@@ -1,0 +1,48 @@
+{
+  "name": "zoapi-icons",
+  "version": "0.2.0",
+  "private": false,
+  "sideEffects": false,
+  "main": "./dist/package-entry.js",
+  "module": "./dist/package-entry.mjs",
+  "types": "./dist/package-entry.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/package-entry.d.ts",
+      "import": "./dist/package-entry.mjs",
+      "require": "./dist/package-entry.js"
+    }
+  },
+  "files": [
+    "dist",
+    "icons",
+    "generated"
+  ],
+  "scripts": {
+    "generate:icons": "node scripts/generate-icons.mjs",
+    "migrate:icons": "node scripts/migrate-legacy-icons.mjs",
+    "dev": "npm run generate:icons && next dev",
+    "build": "npm run generate:icons && next build",
+    "build:package": "npm run generate:icons && tsup package-entry.ts --format esm,cjs --dts --tsconfig tsconfig.package.json --out-dir dist",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.10",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "autoprefixer": "10.4.19",
+    "eslint": "8.57.0",
+    "eslint-config-next": "14.2.5",
+    "postcss": "8.4.39",
+    "tailwindcss": "3.4.6",
+    "tsup": "8.2.4",
+    "typescript": "5.5.3"
+  }
+}
+
