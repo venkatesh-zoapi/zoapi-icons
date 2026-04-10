@@ -1,5 +1,3 @@
-export { Flash } from "./Flash";
-export { Money Slate } from "./Money Slate";
 export { Slate } from "./Slate";
 export { AArrowUp } from "./a-arrow-up";
 export { ALargeSmall } from "./a-large-small";
@@ -16,6 +14,7 @@ export { Laptop } from "./laptop";
 export { Mail } from "./mail";
 export { Map } from "./map";
 export { MessageCircle } from "./message-circle";
+export { MoneySlate } from "./money-slate";
 export { Music } from "./music";
 export { Pause } from "./pause";
 export { Phone } from "./phone";

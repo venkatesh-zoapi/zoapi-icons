@@ -1,7 +1,7 @@
 import { memo } from "react";
 import type { IconComponent } from "../runtime/types";
 
-const Money Slate: IconComponent = ({
+const MoneySlate: IconComponent = ({
   size = 24,
   strokeWidth = 2,
   color = "currentColor",
@@ -30,6 +30,6 @@ const Money Slate: IconComponent = ({
   </svg>
 );
 
-const MemoMoney Slate = memo(Money Slate);
+const MemoMoneySlate = memo(MoneySlate);
 
-export { MemoMoney Slate as Money Slate };
+export { MemoMoneySlate as MoneySlate };

@@ -1,8 +1,6 @@
 import type { IconComponent } from "./types";
 
 export const iconLoaders: Record<string, () => Promise<IconComponent>> = {
-  "Flash": () => import("../icons/Flash").then((m) => m.Flash),
-  "Money Slate": () => import("../icons/Money Slate").then((m) => m.Money Slate),
   "Slate": () => import("../icons/Slate").then((m) => m.Slate),
   "a-arrow-up": () => import("../icons/a-arrow-up").then((m) => m.AArrowUp),
   "a-large-small": () => import("../icons/a-large-small").then((m) => m.ALargeSmall),
@@ -19,6 +17,7 @@ export const iconLoaders: Record<string, () => Promise<IconComponent>> = {
   "mail": () => import("../icons/mail").then((m) => m.Mail),
   "map": () => import("../icons/map").then((m) => m.Map),
   "message-circle": () => import("../icons/message-circle").then((m) => m.MessageCircle),
+  "money-slate": () => import("../icons/money-slate").then((m) => m.MoneySlate),
   "music": () => import("../icons/music").then((m) => m.Music),
   "pause": () => import("../icons/pause").then((m) => m.Pause),
   "phone": () => import("../icons/phone").then((m) => m.Phone),
