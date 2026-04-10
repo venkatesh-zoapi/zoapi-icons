@@ -1,5 +1,5 @@
 export { Flash } from "./Flash";
-export { Money } from "./Money";
+export { Money Slate } from "./Money Slate";
 export { Slate } from "./Slate";
 export { AArrowUp } from "./a-arrow-up";
 export { ALargeSmall } from "./a-large-small";
