@@ -1,0 +1,142 @@
+{
+  "message-circle": {
+    "category": "Communication",
+    "tags": [
+      "chat",
+      "bubble"
+    ]
+  },
+  "mail": {
+    "category": "Communication",
+    "tags": [
+      "email",
+      "inbox"
+    ]
+  },
+  "phone": {
+    "category": "Communication",
+    "tags": [
+      "call",
+      "contact"
+    ]
+  },
+  "send": {
+    "category": "Communication",
+    "tags": [
+      "share",
+      "paper plane"
+    ]
+  },
+  "smartphone": {
+    "category": "Devices",
+    "tags": [
+      "mobile",
+      "phone"
+    ]
+  },
+  "laptop": {
+    "category": "Devices",
+    "tags": [
+      "computer",
+      "macbook"
+    ]
+  },
+  "watch": {
+    "category": "Devices",
+    "tags": [
+      "clock",
+      "wearable"
+    ]
+  },
+  "cpu": {
+    "category": "Devices",
+    "tags": [
+      "chip",
+      "processor"
+    ]
+  },
+  "compass": {
+    "category": "Navigation",
+    "tags": [
+      "direction",
+      "explore"
+    ]
+  },
+  "map": {
+    "category": "Navigation",
+    "tags": [
+      "location",
+      "route"
+    ]
+  },
+  "pin": {
+    "category": "Navigation",
+    "tags": [
+      "marker",
+      "location"
+    ]
+  },
+  "route": {
+    "category": "Navigation",
+    "tags": [
+      "path",
+      "directions"
+    ]
+  },
+  "camera": {
+    "category": "Media",
+    "tags": [
+      "photo",
+      "lens"
+    ]
+  },
+  "play": {
+    "category": "Media",
+    "tags": [
+      "video",
+      "start"
+    ]
+  },
+  "pause": {
+    "category": "Media",
+    "tags": [
+      "stop",
+      "audio"
+    ]
+  },
+  "music": {
+    "category": "Media",
+    "tags": [
+      "song",
+      "audio"
+    ]
+  },
+  "file": {
+    "category": "Files",
+    "tags": [
+      "document",
+      "page"
+    ]
+  },
+  "file-code": {
+    "category": "Files",
+    "tags": [
+      "dev",
+      "snippet"
+    ]
+  },
+  "folder": {
+    "category": "Files",
+    "tags": [
+      "directory",
+      "storage"
+    ]
+  },
+  "download": {
+    "category": "Files",
+    "tags": [
+      "save",
+      "arrow"
+    ]
+  }
+}

@@ -13,11 +13,8 @@ const Compass: IconComponent = ({
     viewBox="0 0 24 24"
     width={size}
     height={size}
-    fill="none"
-    stroke={color}
+    color={color}
     strokeWidth={strokeWidth}
-    strokeLinecap="round"
-    strokeLinejoin="round"
     className={className}
     {...rest}
   >

@@ -1,7 +1,7 @@
 import type { IconComponent } from "./types";
 
 export const iconLoaders: Record<string, () => Promise<IconComponent>> = {
-  "Slate": () => import("../icons/Slate").then((m) => m.Slate),
+  "slate": () => import("../icons/slate").then((m) => m.Slate),
   "a-arrow-up": () => import("../icons/a-arrow-up").then((m) => m.AArrowUp),
   "a-large-small": () => import("../icons/a-large-small").then((m) => m.ALargeSmall),
   "activity": () => import("../icons/activity").then((m) => m.Activity),

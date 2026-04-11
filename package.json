@@ -15,13 +15,14 @@
   },
   "files": [
     "dist",
-    "icons",
+    "src/icons",
     "generated"
   ],
   "scripts": {
     "generate:icons": "node scripts/generate-icons.mjs",
     "migrate:icons": "node scripts/migrate-legacy-icons.mjs",
-    "dev": "npm run generate:icons && next dev",
+    "watch:icons": "chokidar \"src/icons/**/*.{svg,json}\" -c \"npm run generate:icons\" --initial",
+    "dev": "npm run generate:icons && concurrently -k \"npm:watch:icons\" \"next dev\"",
     "build": "npm run generate:icons && next build",
     "build:package": "npm run generate:icons && tsup package-entry.ts --format esm,cjs --dts --tsconfig tsconfig.package.json --out-dir dist",
     "start": "next start",
@@ -37,6 +38,8 @@
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
     "autoprefixer": "10.4.19",
+    "chokidar-cli": "3.0.0",
+    "concurrently": "9.0.1",
     "eslint": "8.57.0",
     "eslint-config-next": "14.2.5",
     "postcss": "8.4.39",

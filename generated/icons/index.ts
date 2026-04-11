@@ -1,4 +1,4 @@
-export { Slate } from "./Slate";
+export { Slate } from "./slate";
 export { AArrowUp } from "./a-arrow-up";
 export { ALargeSmall } from "./a-large-small";
 export { Activity } from "./activity";

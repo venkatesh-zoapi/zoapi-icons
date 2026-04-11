@@ -5,21 +5,127 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Icon } from "@/components/icon";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { iconRecords } from "@/generated/runtime";
+import { iconRecords, iconSvgMap, iconViewBoxMap } from "@/generated/runtime";
 import { cn } from "@/lib/cn";
 import { useDebouncedValue } from "@/lib/use-debounce";
 
-type CategoryFilter = "All" | string;
+const BRAND_COLORS = [
+  { label: "Slate", value: "#F9F9F9" },
+  { label: "Coal", value: "#131419" },
+  { label: "Ash", value: "#999999" }
+] as const;
 
-const makeSvg = (body: string, size: number, strokeWidth: number, color: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+const GRADIENT_ANGLES = [0, 45, 90, 135, 180] as const;
+
+const DRAWABLE_TAGS = new Set([
+  "path",
+  "circle",
+  "ellipse",
+  "rect",
+  "line",
+  "polyline",
+  "polygon",
+  "g"
+]);
+
+const KEEP_TAGS = new Set([
+  "defs",
+  "clippath",
+  "lineargradient",
+  "radialgradient",
+  "stop",
+  "mask",
+  "pattern",
+  "filter"
+]);
+
+function stripPaintFromStyle(styleValue: string) {
+  return styleValue
+    .split(";")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .filter((part) => !part.startsWith("fill:") && !part.startsWith("stroke:"))
+    .join("; ");
+}
+
+function normalizeNode(node: Element, strokeWidth: number, stroke: string) {
+  const tag = node.tagName.toLowerCase();
+
+  if (!KEEP_TAGS.has(tag) && DRAWABLE_TAGS.has(tag)) {
+    node.setAttribute("fill", "none");
+    node.setAttribute("stroke", stroke);
+    node.setAttribute("stroke-width", String(strokeWidth));
+  }
+
+  const style = node.getAttribute("style");
+  if (style) {
+    const next = stripPaintFromStyle(style);
+    if (next) {
+      node.setAttribute("style", next);
+    } else {
+      node.removeAttribute("style");
+    }
+  }
+
+  Array.from(node.children).forEach((child) => normalizeNode(child, strokeWidth, stroke));
+}
+
+function gradientDef(id: string, angle: number) {
+  return `<defs><linearGradient id="${id}" gradientTransform="rotate(${angle})"><stop offset="0%" stop-color="#F1703C" /><stop offset="29%" stop-color="#F06D3F" /><stop offset="53%" stop-color="#EF6449" /><stop offset="75%" stop-color="#EC545A" /><stop offset="95%" stop-color="#E93F72" /><stop offset="100%" stop-color="#E93A79" /></linearGradient></defs>`;
+}
+
+function buildSvgMarkup(
+  iconName: string,
+  size: number,
+  strokeWidth: number,
+  color: string,
+  gradient: boolean,
+  gradientAngle: number
+) {
+  const rawBody = iconSvgMap[iconName] ?? "";
+  const viewBox = iconViewBoxMap[iconName] ?? "0 0 24 24";
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(
+    `<svg xmlns="http://www.w3.org/2000/svg">${rawBody}</svg>`,
+    "image/svg+xml"
+  );
+
+  if (doc.querySelector("parsererror")) {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="${viewBox}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3" /><path d="m9 9 6 6M15 9l-6 6" /></svg>`;
+  }
+
+  const svg = doc.documentElement;
+  const gradId = `grad-export-${iconName}-${Math.random().toString(36).slice(2, 9)}`;
+  const stroke = gradient ? `url(#${gradId})` : "currentColor";
+
+  normalizeNode(svg, strokeWidth, stroke);
+
+  if (gradient) {
+    const defsDoc = parser.parseFromString(
+      `<svg xmlns="http://www.w3.org/2000/svg">${gradientDef(gradId, gradientAngle)}</svg>`,
+      "image/svg+xml"
+    );
+    const defs = defsDoc.querySelector("defs");
+    if (defs) {
+      svg.insertBefore(defs, svg.firstChild);
+    }
+  }
+
+  const serializer = new XMLSerializer();
+  const body = Array.from(svg.childNodes)
+    .map((node) => serializer.serializeToString(node))
+    .join("");
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="${viewBox}" color="${color}">${body}</svg>`;
+}
 
 export function IconsBrowser() {
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<CategoryFilter>("All");
   const [size, setSize] = useState(24);
   const [strokeWidth, setStrokeWidth] = useState(2);
-  const [color, setColor] = useState("#22c55e");
+  const [selectedColor, setSelectedColor] = useState<string>(BRAND_COLORS[0].value);
+  const [isGradient, setIsGradient] = useState(false);
+  const [gradientAngle, setGradientAngle] = useState<(typeof GRADIENT_ANGLES)[number]>(45);
   const [toast, setToast] = useState("");
 
   const router = useRouter();
@@ -27,29 +133,21 @@ export function IconsBrowser() {
   const searchParams = useSearchParams();
   const selected = searchParams.get("icon") ?? "";
 
-  const categories = useMemo(() => {
-    const set = new Set<string>();
-    iconRecords.forEach((icon) => set.add(icon.category));
-    return ["All", ...Array.from(set)] as CategoryFilter[];
-  }, []);
-
   const debounced = useDebouncedValue(query, 120);
   const deferred = useDeferredValue(debounced);
 
   const filteredIcons = useMemo(() => {
     const normalized = deferred.toLowerCase().trim();
-    return iconRecords.filter((icon) => {
-      const byCategory = category === "All" || icon.category === category;
-      if (!byCategory) return false;
-      if (!normalized) return true;
 
+    return iconRecords.filter((icon) => {
+      if (!normalized) return true;
       return (
         icon.name.includes(normalized) ||
         icon.tags.some((tag) => tag.toLowerCase().includes(normalized)) ||
         icon.componentName.toLowerCase().includes(normalized)
       );
     });
-  }, [deferred, category]);
+  }, [deferred]);
 
   const selectedIcon = iconRecords.find((icon) => icon.name === selected) ?? null;
   const selectedIndex = selectedIcon
@@ -65,7 +163,9 @@ export function IconsBrowser() {
   const closeModal = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("icon");
-    router.replace(`${pathname}${params.toString() ? `?${params.toString()}` : ""}`, { scroll: false });
+    router.replace(`${pathname}${params.toString() ? `?${params.toString()}` : ""}`, {
+      scroll: false
+    });
   }, [pathname, router, searchParams]);
 
   const openModal = useCallback(
@@ -108,7 +208,14 @@ export function IconsBrowser() {
 
   const downloadSvg = () => {
     if (!selectedIcon) return;
-    const svg = makeSvg(selectedIcon.body, size, strokeWidth, color);
+    const svg = buildSvgMarkup(
+      selectedIcon.name,
+      size,
+      strokeWidth,
+      selectedColor,
+      isGradient,
+      gradientAngle
+    );
 
     const blob = new Blob([svg], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
@@ -130,31 +237,57 @@ export function IconsBrowser() {
           </div>
           <ThemeToggle />
         </div>
-        <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center">
+
+        <div className="mt-4 flex flex-col gap-3">
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name, tags, or component name..."
+            placeholder="Search icons by name or tags..."
             className="h-11 w-full rounded-xl border border-border bg-panel px-4 text-sm outline-none transition focus:border-accent/80"
             aria-label="Search icons"
           />
-          <div className="flex flex-wrap gap-2">
-            {categories.map((item) => (
+
+          <div className="flex flex-wrap items-center gap-2">
+            {BRAND_COLORS.map((item) => (
               <button
-                key={item}
+                key={item.value}
                 type="button"
-                onClick={() => setCategory(item)}
+                onClick={() => setSelectedColor(item.value)}
                 className={cn(
                   "rounded-lg border px-3 py-2 text-xs font-medium transition",
-                  item === category
+                  selectedColor === item.value
                     ? "border-accent/80 bg-accent/10 text-accent"
                     : "border-border bg-panel text-muted hover:text-text"
                 )}
               >
-                {item}
+                {item.label}
               </button>
             ))}
+
+            <label className="ml-2 inline-flex items-center gap-2 rounded-lg border border-border bg-panel px-3 py-2 text-xs text-muted">
+              <input
+                type="checkbox"
+                checked={isGradient}
+                onChange={(e) => setIsGradient(e.target.checked)}
+                className="h-3.5 w-3.5"
+              />
+              Gradient Mode
+            </label>
+
+            {isGradient && (
+              <select
+                value={gradientAngle}
+                onChange={(e) => setGradientAngle(Number(e.target.value) as (typeof GRADIENT_ANGLES)[number])}
+                className="rounded-lg border border-border bg-panel px-3 py-2 text-xs text-muted outline-none focus:border-accent/70"
+              >
+                {GRADIENT_ANGLES.map((angle) => (
+                  <option key={angle} value={angle}>
+                    {angle}°
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
       </header>
@@ -168,7 +301,13 @@ export function IconsBrowser() {
             className="group animate-fade-in rounded-xl border border-border bg-panel p-4 text-left transition hover:scale-[1.02] hover:border-accent/60"
           >
             <div className="mb-3 flex h-8 items-center justify-center text-text">
-              <Icon name={icon.name} size={24} />
+              <Icon
+                name={icon.name}
+                size={24}
+                color={selectedColor}
+                gradient={isGradient}
+                gradientAngle={gradientAngle}
+              />
             </div>
             <p className="truncate text-xs text-muted group-hover:text-text">{icon.name}</p>
           </button>
@@ -201,39 +340,73 @@ export function IconsBrowser() {
             </div>
 
             <div className="mb-6 flex min-h-40 items-center justify-center rounded-xl border border-border bg-surface">
-              <Icon name={selectedIcon.name} size={size * 2} strokeWidth={strokeWidth} color={color} />
+              <Icon
+                name={selectedIcon.name}
+                size={size * 2}
+                strokeWidth={strokeWidth}
+                color={selectedColor}
+                gradient={isGradient}
+                gradientAngle={gradientAngle}
+              />
             </div>
 
             <p className="mb-3 text-xs text-muted">Tags: {selectedIcon.tags.join(", ")}</p>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
               <label className="text-xs text-muted">
                 Size: {size}px
-                <input type="range" min={16} max={64} value={size} onChange={(e) => setSize(Number(e.target.value))} className="mt-2 w-full" />
+                <input
+                  type="range"
+                  min={16}
+                  max={64}
+                  value={size}
+                  onChange={(e) => setSize(Number(e.target.value))}
+                  className="mt-2 w-full"
+                />
               </label>
 
               <label className="text-xs text-muted">
                 Stroke: {strokeWidth.toFixed(1)}
-                <input type="range" min={1} max={3} step={0.25} value={strokeWidth} onChange={(e) => setStrokeWidth(Number(e.target.value))} className="mt-2 w-full" />
-              </label>
-
-              <label className="text-xs text-muted">
-                Color
-                <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="mt-2 h-9 w-full rounded border border-border bg-transparent" />
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.25}
+                  value={strokeWidth}
+                  onChange={(e) => setStrokeWidth(Number(e.target.value))}
+                  className="mt-2 w-full"
+                />
               </label>
             </div>
 
             <div className="mt-6 grid gap-2 md:grid-cols-2">
               <button
                 type="button"
-                onClick={() => copy(makeSvg(selectedIcon.body, size, strokeWidth, color), "SVG")}
+                onClick={() =>
+                  copy(
+                    buildSvgMarkup(
+                      selectedIcon.name,
+                      size,
+                      strokeWidth,
+                      selectedColor,
+                      isGradient,
+                      gradientAngle
+                    ),
+                    "SVG"
+                  )
+                }
                 className="rounded-lg border border-border bg-surface px-3 py-2 text-sm hover:border-accent/60"
               >
                 Copy SVG
               </button>
               <button
                 type="button"
-                onClick={() => copy(`import { ${selectedIcon.componentName} } from "zoapi-icons";\n\n<${selectedIcon.componentName} size={${size}} strokeWidth={${strokeWidth}} color=\"${color}\" />`, "React component")}
+                onClick={() =>
+                  copy(
+                    `import { ${selectedIcon.componentName} } from "zoapi-icons";\n\n<${selectedIcon.componentName} size={${size}} strokeWidth={${strokeWidth}} color=\"${selectedColor}\"${isGradient ? ` gradient gradientAngle={${gradientAngle}}` : ""} />`,
+                    "React component"
+                  )
+                }
                 className="rounded-lg border border-border bg-surface px-3 py-2 text-sm hover:border-accent/60"
               >
                 Copy React Component
@@ -245,13 +418,17 @@ export function IconsBrowser() {
               >
                 Copy Name
               </button>
-              <button type="button" onClick={downloadSvg} className="rounded-lg border border-border bg-surface px-3 py-2 text-sm hover:border-accent/60">
+              <button
+                type="button"
+                onClick={downloadSvg}
+                className="rounded-lg border border-border bg-surface px-3 py-2 text-sm hover:border-accent/60"
+              >
                 Download SVG
               </button>
             </div>
 
             <pre className="mt-5 overflow-x-auto rounded-lg border border-border bg-surface p-3 text-xs text-muted">
-{`import { ${selectedIcon.componentName} } from "zoapi-icons";\n\n<${selectedIcon.componentName} size={${size}} strokeWidth={${strokeWidth}} color="${color}" />`}
+{`import { ${selectedIcon.componentName} } from "zoapi-icons";\n\n<${selectedIcon.componentName} size={${size}} strokeWidth={${strokeWidth}} color="${selectedColor}"${isGradient ? ` gradient gradientAngle={${gradientAngle}}` : ""} />`}
             </pre>
           </div>
         </div>
